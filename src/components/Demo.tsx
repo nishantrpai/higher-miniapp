@@ -1,626 +1,457 @@
-"use client";
-
-import { useCallback, useMemo, useState } from "react";
-import { Input } from "../components/ui/input";
-import { signIn, signOut, getCsrfToken } from "next-auth/react";
-import sdk, {
-  SignIn as SignInCore,
-} from "@farcaster/frame-sdk";
-import {
-  useAccount,
-  useSendTransaction,
-  useSignMessage,
-  useSignTypedData,
-  useWaitForTransactionReceipt,
-  useDisconnect,
-  useConnect,
-  useSwitchChain,
-  useChainId,
-} from "wagmi";
-
-import { config } from "~/components/providers/WagmiProvider";
+import Head from "next/head";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "~/components/ui/Button";
-import { truncateAddress } from "~/lib/truncateAddress";
-import { base, degen, mainnet, optimism, unichain } from "wagmi/chains";
-import { BaseError, UserRejectedRequestError } from "viem";
-import { useSession } from "next-auth/react";
-import { Label } from "~/components/ui/label";
-import { useFrame } from "~/components/providers/FrameProvider";
+import { removeBackground } from "@imgly/background-removal";
 
-export default function Demo(
-  { title }: { title?: string } = { title: "Frames v2 Demo" }
-) {
-  const { isSDKLoaded, context, added, notificationDetails, lastEvent, addFrame, addFrameResult } = useFrame();
-  const [isContextOpen, setIsContextOpen] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
+const tools = [
+  {
+    id: "filter",
+    name: "Higher Filter",
+    settings: [
+      { type: "color", label: "Color", state: "color", default: "#54FF56" },
+      { type: "checkbox", label: "Reverse filter", state: "reverseFilter", default: false },
+      { type: "range", label: "Filter Threshold", state: "filterThreshold", min: 0, max: 255, default: 0 },
+      { type: "range", label: "Grainy", state: "grainyThreshold", min: 0, max: 100, default: 0 },
+      { type: "range", label: "Motion Blur", state: "motionBlur", min: 0, max: 100, default: 0 },
+      { type: "range", label: "Opacity Layer", state: "opacityLayer", min: 0, max: 100, default: 0 }
+    ],
+    apply: (image) => {
+      if (!image) return;
+      const reverseFilter = document.getElementById("reverseFilter")?.checked;
+      const filterThreshold = parseInt(document.getElementById("filterThreshold")?.value || "0", 10);
+      const grainyThreshold = parseInt(document.getElementById("grainyThreshold")?.value || "0", 10);
+      const motionBlur = parseInt(document.getElementById("motionBlur")?.value || "0", 10);
+      const color = document.getElementById("color")?.value || "#000000";
+      const opacityLayer = parseInt(document.getElementById("opacityLayer")?.value || "0", 10);
 
-  const [sendNotificationResult, setSendNotificationResult] = useState("");
-
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-
-  const {
-    sendTransaction,
-    error: sendTxError,
-    isError: isSendTxError,
-    isPending: isSendTxPending,
-  } = useSendTransaction();
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: txHash as `0x${string}`,
-    });
-
-  const {
-    signTypedData,
-    error: signTypedError,
-    isError: isSignTypedError,
-    isPending: isSignTypedPending,
-  } = useSignTypedData();
-
-  const { disconnect } = useDisconnect();
-  const { connect } = useConnect();
-
-  const {
-    switchChain,
-    error: switchChainError,
-    isError: isSwitchChainError,
-    isPending: isSwitchChainPending,
-  } = useSwitchChain();
-
-  const nextChain = useMemo(() => {
-    if (chainId === base.id) {
-      return optimism;
-    } else if (chainId === optimism.id) {
-      return degen;
-    } else if (chainId === degen.id) {
-      return mainnet;
-    } else if (chainId === mainnet.id) {
-      return unichain;
-    } else {
-      return base;
-    }
-  }, [chainId]);
-
-  const handleSwitchChain = useCallback(() => {
-    switchChain({ chainId: nextChain.id });
-  }, [switchChain, nextChain.id]);
-
-  const openUrl = useCallback(() => {
-    sdk.actions.openUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-  }, []);
-
-  const openWarpcastUrl = useCallback(() => {
-    sdk.actions.openUrl("https://warpcast.com/~/compose");
-  }, []);
-
-  const close = useCallback(() => {
-    sdk.actions.close();
-  }, []);
-
-  const sendNotification = useCallback(async () => {
-    setSendNotificationResult("");
-    if (!notificationDetails || !context) {
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/send-notification", {
-        method: "POST",
-        mode: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fid: context.user.fid,
-          notificationDetails,
-        }),
-      });
-
-      if (response.status === 200) {
-        setSendNotificationResult("Success");
-        return;
-      } else if (response.status === 429) {
-        setSendNotificationResult("Rate limited");
-        return;
+      const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+          ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+          : null;
+      };
+      const filterColor = hexToRgb(color);
+      const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+      if (!canvas || !filterColor) return;
+      const context = canvas.getContext("2d");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = "black";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, image.width, image.height);
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const i = (y * canvas.width + x) * 4;
+          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          if ((reverseFilter && avg <= filterThreshold) || (!reverseFilter && avg > filterThreshold)) {
+            data[i] = filterColor.r;
+            data[i + 1] = filterColor.g;
+            data[i + 2] = filterColor.b;
+            data[i + 3] = data[i + 3] * (avg / 255);
+          }
+        }
       }
-
-      const data = await response.text();
-      setSendNotificationResult(`Error: ${data}`);
-    } catch (error) {
-      setSendNotificationResult(`Error: ${error}`);
-    }
-  }, [context, notificationDetails]);
-
-  const sendTx = useCallback(() => {
-    sendTransaction(
-      {
-        // call yoink() on Yoink contract
-        to: "0x4bBFD120d9f352A0BEd7a014bd67913a2007a878",
-        data: "0x9846cd9efc000023c0",
-      },
-      {
-        onSuccess: (hash) => {
-          setTxHash(hash);
-        },
+      context.putImageData(imageData, 0, 0);
+      if (grainyThreshold !== 0) {
+        for (let i = 0; i < data.length; i += 4) {
+          const grain = Math.random() * grainyThreshold;
+          data[i] += grain;
+          data[i + 1] += grain;
+          data[i + 2] += grain;
+        }
+        context.putImageData(imageData, 0, 0);
       }
-    );
-  }, [sendTransaction]);
-
-  const signTyped = useCallback(() => {
-    signTypedData({
-      domain: {
-        name: "Frames v2 Demo",
-        version: "1",
-        chainId,
-      },
-      types: {
-        Message: [{ name: "content", type: "string" }],
-      },
-      message: {
-        content: "Hello from Frames v2!",
-      },
-      primaryType: "Message",
-    });
-  }, [chainId, signTypedData]);
-
-  const toggleContext = useCallback(() => {
-    setIsContextOpen((prev) => !prev);
-  }, []);
-
-  if (!isSDKLoaded) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <div
-      style={{
-        paddingTop: context?.client.safeAreaInsets?.top ?? 0,
-        paddingBottom: context?.client.safeAreaInsets?.bottom ?? 0,
-        paddingLeft: context?.client.safeAreaInsets?.left ?? 0,
-        paddingRight: context?.client.safeAreaInsets?.right ?? 0,
-      }}
-    >
-      <div className="w-[300px] mx-auto py-2 px-2">
-        <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
-
-        <div className="mb-4">
-          <h2 className="font-2xl font-bold">Context</h2>
-          <button
-            onClick={toggleContext}
-            className="flex items-center gap-2 transition-colors"
-          >
-            <span
-              className={`transform transition-transform ${
-                isContextOpen ? "rotate-90" : ""
-              }`}
-            >
-              ➤
-            </span>
-            Tap to expand
-          </button>
-
-          {isContextOpen && (
-            <div className="p-4 mt-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                {JSON.stringify(context, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h2 className="font-2xl font-bold">Actions</h2>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.signIn
-              </pre>
-            </div>
-            <SignIn />
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.openUrl
-              </pre>
-            </div>
-            <Button onClick={openUrl}>Open Link</Button>
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.openUrl
-              </pre>
-            </div>
-            <Button onClick={openWarpcastUrl}>Open Warpcast Link</Button>
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.viewProfile
-              </pre>
-            </div>
-            <ViewProfile />
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.close
-              </pre>
-            </div>
-            <Button onClick={close}>Close Frame</Button>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <h2 className="font-2xl font-bold">Last event</h2>
-
-          <div className="p-4 mt-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-              {lastEvent || "none"}
-            </pre>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="font-2xl font-bold">Add to client & notifications</h2>
-
-          <div className="mt-2 mb-4 text-sm">
-            Client fid {context?.client.clientFid},
-            {added ? " frame added to client," : " frame not added to client,"}
-            {notificationDetails
-              ? " notifications enabled"
-              : " notifications disabled"}
-          </div>
-
-          <div className="mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg my-2">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words max-w-[260px] overflow-x-">
-                sdk.actions.addFrame
-              </pre>
-            </div>
-            {addFrameResult && (
-              <div className="mb-2 text-sm">
-                Add frame result: {addFrameResult}
-              </div>
-            )}
-            <Button onClick={addFrame} disabled={added}>
-              Add frame to client
-            </Button>
-          </div>
-
-          {sendNotificationResult && (
-            <div className="mb-2 text-sm">
-              Send notification result: {sendNotificationResult}
-            </div>
-          )}
-          <div className="mb-4">
-            <Button onClick={sendNotification} disabled={!notificationDetails}>
-              Send notification
-            </Button>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="font-2xl font-bold">Wallet</h2>
-
-          {address && (
-            <div className="my-2 text-xs">
-              Address: <pre className="inline">{truncateAddress(address)}</pre>
-            </div>
-          )}
-
-          {chainId && (
-            <div className="my-2 text-xs">
-              Chain ID: <pre className="inline">{chainId}</pre>
-            </div>
-          )}
-
-          <div className="mb-4">
-            <Button
-              onClick={() =>
-                isConnected
-                  ? disconnect()
-                  : connect({ connector: config.connectors[0] })
+      if (motionBlur !== 0) {
+        const steps = 100;
+        const alpha = 1 / steps;
+        context.save();
+        for (let i = 0; i < steps; i++) {
+          const offset = (i - steps / 2) * (motionBlur / steps);
+          context.globalAlpha = alpha;
+          context.drawImage(canvas, offset, 0, canvas.width, canvas.height);
+        }
+        context.restore();
+      }
+      if (opacityLayer !== 0) {
+        context.fillStyle = `rgba(0,0,0,${opacityLayer / 100})`;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  },
+  {
+    id: "highertags",
+    name: "Higher Tags",
+    settings: [
+      { type: "select", label: "Select Font", state: "selectFont", options: ["Helvetica", "Times New Roman", "Comic Sans", "Higher TM", "Arrow", "Scanner", "Adidagh"], default: "Helvetica" },
+      { type: "color", label: "Color", state: "color", default: "#000000" },
+      { type: "checkbox", label: "Foreground", state: "foreground", default: false },
+      { type: "range", label: "Offset X", state: "offsetX", min: -1500, max: 1500, default: 0 },
+      { type: "range", label: "Offset Y", state: "offsetY", min: -1500, max: 1500, default: 0 },
+      { type: "range", label: "Scale", state: "scale", min: 0, max: 10, step: 0.01, default: 1 },
+      { type: "range", label: "Skew X", state: "skewX", min: -360, max: 360, default: 0 },
+      { type: "range", label: "Skew Y", state: "skewY", min: -360, max: 360, default: 0 },
+      { type: "range", label: "Rotate", state: "offsetTheta", min: -360, max: 360, default: 0 },
+      { type: "range", label: "Drag Gap", state: "dragGap", min: 0, max: 5000, default: 0 },
+      { type: "range", label: "Drag reps", state: "dragReps", min: 0, max: 100, default: 0 },
+      { type: "hidden", state: "processedImageUrl", default: "" },
+      { type: "range", label: "Emboss", state: "emboss", min: 0, max: 100, default: 0 },
+      { type: "range", label: "Opacity", state: "opacity", min: 0, max: 100, default: 100 }
+    ],
+    apply: (image) => {
+      if (!image) return;
+      const offsetX = parseInt(document.getElementById("offsetX")?.value || "0", 10);
+      const offsetY = parseInt(document.getElementById("offsetY")?.value || "0", 10);
+      const scale = parseFloat(document.getElementById("scale")?.value || "1");
+      const offsetTheta = parseInt(document.getElementById("offsetTheta")?.value || "0", 10);
+      const foreground = document.getElementById("foreground")?.checked;
+      const dragGap = parseInt(document.getElementById("dragGap")?.value || "0", 10);
+      const dragReps = parseInt(document.getElementById("dragReps")?.value || "0", 10);
+      const processedImageUrlElem = document.getElementById("processedImageUrl");
+      const processedImageUrl = processedImageUrlElem ? processedImageUrlElem.value : "";
+      const emboss = parseInt(document.getElementById("emboss")?.value || "0", 10);
+      const opacity = parseInt(document.getElementById("opacity")?.value || "0", 10);
+      const skewX = parseInt(document.getElementById("skewX")?.value || "0", 10);
+      const skewY = parseInt(document.getElementById("skewY")?.value || "0", 10);
+      const selectFont = document.getElementById("selectFont")?.value || "Helvetica";
+      const color = document.getElementById("color")?.value || "#000000";
+      const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+      if (!canvas) return;
+      const context = canvas.getContext("2d");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, image.width, image.height);
+      const hat = new Image();
+      hat.onload = () => {
+        context.save();
+        if (!foreground) {
+          context.translate(offsetX, offsetY);
+          context.rotate((offsetTheta * Math.PI) / 180);
+          context.globalAlpha = opacity / 100;
+          if (dragReps > 0) {
+            for (let i = 0; i < dragReps; i++) {
+              context.drawImage(hat, offsetX, offsetY + i * dragGap, hat.width * scale, hat.height * scale);
+            }
+          } else {
+            context.drawImage(hat, offsetX, offsetY, hat.width * scale, hat.height * scale);
+          }
+        } else {
+          if (processedImageUrl && processedImageUrl !== "processing") {
+            const foregroundImg = new Image();
+            foregroundImg.onload = () => {
+              context.save();
+              context.globalAlpha = opacity / 100;
+              if (dragReps > 0) {
+                for (let i = 0; i < dragReps; i++) {
+                  context.save();
+                  context.translate(offsetX, offsetY);
+                  context.rotate((offsetTheta * Math.PI) / 180);
+                  context.drawImage(hat, 0, i * dragGap, hat.width * scale, hat.height * scale);
+                  context.restore();
+                }
+              } else {
+                context.translate(offsetX, offsetY);
+                context.rotate((offsetTheta * Math.PI) / 180);
+                context.drawImage(hat, 0, 0, hat.width * scale, hat.height * scale);
               }
-            >
-              {isConnected ? "Disconnect" : "Connect"}
-            </Button>
-          </div>
-
-          <div className="mb-4">
-            <SignMessage />
-          </div>
-
-          {isConnected && (
-            <>
-              <div className="mb-4">
-                <SendEth />
-              </div>
-              <div className="mb-4">
-                <Button
-                  onClick={sendTx}
-                  disabled={!isConnected || isSendTxPending}
-                  isLoading={isSendTxPending}
-                >
-                  Send Transaction (contract)
-                </Button>
-                {isSendTxError && renderError(sendTxError)}
-                {txHash && (
-                  <div className="mt-2 text-xs">
-                    <div>Hash: {truncateAddress(txHash)}</div>
-                    <div>
-                      Status:{" "}
-                      {isConfirming
-                        ? "Confirming..."
-                        : isConfirmed
-                        ? "Confirmed!"
-                        : "Pending"}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="mb-4">
-                <Button
-                  onClick={signTyped}
-                  disabled={!isConnected || isSignTypedPending}
-                  isLoading={isSignTypedPending}
-                >
-                  Sign Typed Data
-                </Button>
-                {isSignTypedError && renderError(signTypedError)}
-              </div>
-              <div className="mb-4">
-                <Button
-                  onClick={handleSwitchChain}
-                  disabled={isSwitchChainPending}
-                  isLoading={isSwitchChainPending}
-                >
-                  Switch to {nextChain.name}
-                </Button>
-                {isSwitchChainError && renderError(switchChainError)}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SignMessage() {
-  const { isConnected } = useAccount();
-  const { connectAsync } = useConnect();
-  const {
-    signMessage,
-    data: signature,
-    error: signError,
-    isError: isSignError,
-    isPending: isSignPending,
-  } = useSignMessage();
-
-  const handleSignMessage = useCallback(async () => {
-    if (!isConnected) {
-      await connectAsync({
-        chainId: base.id,
-        connector: config.connectors[0],
-      });
-    }
-
-    signMessage({ message: "Hello from Frames v2!" });
-  }, [connectAsync, isConnected, signMessage]);
-
-  return (
-    <>
-      <Button
-        onClick={handleSignMessage}
-        disabled={isSignPending}
-        isLoading={isSignPending}
-      >
-        Sign Message
-      </Button>
-      {isSignError && renderError(signError)}
-      {signature && (
-        <div className="mt-2 text-xs">
-          <div>Signature: {signature}</div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function SendEth() {
-  const { isConnected, chainId } = useAccount();
-  const {
-    sendTransaction,
-    data,
-    error: sendTxError,
-    isError: isSendTxError,
-    isPending: isSendTxPending,
-  } = useSendTransaction();
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: data,
-    });
-
-  const toAddr = useMemo(() => {
-    // Protocol guild address
-    return chainId === base.id
-      ? "0x32e3C7fD24e175701A35c224f2238d18439C7dBC"
-      : "0xB3d8d7887693a9852734b4D25e9C0Bb35Ba8a830";
-  }, [chainId]);
-
-  const handleSend = useCallback(() => {
-    sendTransaction({
-      to: toAddr,
-      value: 1n,
-    });
-  }, [toAddr, sendTransaction]);
-
-  return (
-    <>
-      <Button
-        onClick={handleSend}
-        disabled={!isConnected || isSendTxPending}
-        isLoading={isSendTxPending}
-      >
-        Send Transaction (eth)
-      </Button>
-      {isSendTxError && renderError(sendTxError)}
-      {data && (
-        <div className="mt-2 text-xs">
-          <div>Hash: {truncateAddress(data)}</div>
-          <div>
-            Status:{" "}
-            {isConfirming
-              ? "Confirming..."
-              : isConfirmed
-              ? "Confirmed!"
-              : "Pending"}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function SignIn() {
-  const [signingIn, setSigningIn] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
-  const [signInResult, setSignInResult] = useState<SignInCore.SignInResult>();
-  const [signInFailure, setSignInFailure] = useState<string>();
-  const { data: session, status } = useSession();
-
-  const getNonce = useCallback(async () => {
-    const nonce = await getCsrfToken();
-    if (!nonce) throw new Error("Unable to generate nonce");
-    return nonce;
-  }, []);
-
-  const handleSignIn = useCallback(async () => {
-    try {
-      setSigningIn(true);
-      setSignInFailure(undefined);
-      const nonce = await getNonce();
-      const result = await sdk.actions.signIn({ nonce });
-      setSignInResult(result);
-
-      await signIn("credentials", {
-        message: result.message,
-        signature: result.signature,
-        redirect: false,
-      });
-    } catch (e) {
-      if (e instanceof SignInCore.RejectedByUser) {
-        setSignInFailure("Rejected by user");
+              context.restore();
+              context.drawImage(foregroundImg, 0, 0, canvas.width, canvas.height);
+            };
+            foregroundImg.src = processedImageUrl;
+          }
+        }
+        context.restore();
+        context.globalAlpha = 1;
+      };
+      let svgPath;
+      switch (selectFont) {
+        case "Helvetica":
+          svgPath = "/higherhelvetica.svg";
+          break;
+        case "Times New Roman":
+          svgPath = "/higheritalic.svg";
+          break;
+        case "Comic Sans":
+          svgPath = "/highercomicsans.svg";
+          break;
+        case "Higher TM":
+          svgPath = "/highertm.svg";
+          break;
+        case "Arrow":
+          svgPath = "/higherarrow.svg";
+          break;
+        case "Scanner":
+          svgPath = "/higherscanner.svg";
+          break;
+        case "Adidagh":
+          svgPath = "/adidagh.svg";
+          break;
+        default:
+          svgPath = "/higherdefault.svg";
+      }
+      if (["/higherscanner.svg"].includes(svgPath)) {
+        hat.src = svgPath;
         return;
       }
-
-      setSignInFailure("Unknown error");
-    } finally {
-      setSigningIn(false);
-    }
-  }, [getNonce]);
-
-  const handleSignOut = useCallback(async () => {
-    try {
-      setSigningOut(true);
-      await signOut({ redirect: false });
-      setSignInResult(undefined);
-    } finally {
-      setSigningOut(false);
-    }
-  }, []);
-
-  return (
-    <>
-      {status !== "authenticated" && (
-        <Button onClick={handleSignIn} disabled={signingIn}>
-          Sign In with Farcaster
-        </Button>
-      )}
-      {status === "authenticated" && (
-        <Button onClick={handleSignOut} disabled={signingOut}>
-          Sign out
-        </Button>
-      )}
-      {session && (
-        <div className="my-2 p-2 text-xs overflow-x-scroll bg-gray-100 rounded-lg font-mono">
-          <div className="font-semibold text-gray-500 mb-1">Session</div>
-          <div className="whitespace-pre">
-            {JSON.stringify(session, null, 2)}
-          </div>
-        </div>
-      )}
-      {signInFailure && !signingIn && (
-        <div className="my-2 p-2 text-xs overflow-x-scroll bg-gray-100 rounded-lg font-mono">
-          <div className="font-semibold text-gray-500 mb-1">SIWF Result</div>
-          <div className="whitespace-pre">{signInFailure}</div>
-        </div>
-      )}
-      {signInResult && !signingIn && (
-        <div className="my-2 p-2 text-xs overflow-x-scroll bg-gray-100 rounded-lg font-mono">
-          <div className="font-semibold text-gray-500 mb-1">SIWF Result</div>
-          <div className="whitespace-pre">
-            {JSON.stringify(signInResult, null, 2)}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ViewProfile() {
-  const [fid, setFid] = useState("3");
-
-  return (
-    <>
-      <div>
-        <Label
-          className="text-xs font-semibold text-gray-500 mb-1"
-          htmlFor="view-profile-fid"
-        >
-          Fid
-        </Label>
-        <Input
-          id="view-profile-fid"
-          type="number"
-          value={fid}
-          className="mb-2"
-          onChange={(e) => {
-            setFid(e.target.value);
-          }}
-          step="1"
-          min="1"
-        />
-      </div>
-      <Button
-        onClick={() => {
-          sdk.actions.viewProfile({ fid: parseInt(fid) });
-        }}
-      >
-        View Profile
-      </Button>
-    </>
-  );
-}
-const renderError = (error: Error | null) => {
-  if (!error) return null;
-  if (error instanceof BaseError) {
-    const isUserRejection = error.walk(
-      (e) => e instanceof UserRejectedRequestError
-    );
-
-    if (isUserRejection) {
-      return <div className="text-red-500 text-xs mt-1">Rejected by user.</div>;
+      fetch(svgPath)
+        .then(response => response.text())
+        .then(svgText => {
+          const coloredSvg = svgText.replace(/fill="[^"]*"/g, `fill="${color}"`);
+          const blob = new Blob([coloredSvg], { type: "image/svg+xml" });
+          hat.src = URL.createObjectURL(blob);
+        });
     }
   }
+];
 
-  return <div className="text-red-500 text-xs mt-1">{error.message}</div>;
-};
+export default function Demo() {
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [activeTool, setActiveTool] = useState("filter");
+  const [history, setHistory] = useState<string[]>([]);
 
+  const saveHistory = () => {
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    if (!canvas) return;
+    const dataURL = canvas.toDataURL();
+    setHistory((prev) => [...prev, dataURL]);
+  };
+
+  const undo = () => {
+    if (history.length === 0) return;
+    const lastState = history[history.length - 1];
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(img, 0, 0);
+      setHistory((prev) => prev.slice(0, -1));
+    };
+    img.src = lastState;
+  };
+
+  const renderSettings = () => {
+    const tool = tools.find((t) => t.id === activeTool);
+    if (!tool) return null;
+    return (
+      <div>
+        {tool.settings.map((setting) => {
+          switch (setting.type) {
+            case "checkbox":
+              return (
+                <div key={setting.state} style={{ marginTop: 20, display: "flex", alignItems: "center" }}>
+                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                    {setting.label}
+                  </label>
+                  <input type="checkbox" id={setting.state} defaultChecked={setting.default} onChange={() => tool.apply(image)} />
+                </div>
+              );
+            case "range":
+              return (
+                <div key={setting.state} style={{ marginTop: 20, display: "flex", alignItems: "center" }}>
+                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                    {setting.label}:
+                  </label>
+                  <input
+                    type="range"
+                    id={setting.state}
+                    min={setting.min}
+                    max={setting.max}
+                    step={setting.step || 1}
+                    defaultValue={setting.default}
+                    onChange={(e) => {
+                      document.getElementById(setting.state).value = e.target.value;
+                      tool.apply(image);
+                    }}
+                  />
+                </div>
+              );
+            case "select":
+              return (
+                <div key={setting.state} style={{ marginTop: 20 }}>
+                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                    {setting.label}:
+                  </label>
+                  <select id={setting.state} defaultValue={setting.default} onChange={() => tool.apply(image)}>
+                    {setting.options.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            case "color":
+              return (
+                <div key={setting.state} style={{ marginTop: 20, display: "flex", alignItems: "center" }}>
+                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                    {setting.label}:
+                  </label>
+                  <input type="color" id={setting.state} defaultValue={setting.default} onChange={() => tool.apply(image)} />
+                </div>
+              );
+            case "hidden":
+              return <input key={setting.state} type="hidden" id={setting.state} defaultValue={setting.default} />;
+            default:
+              return null;
+          }
+        })}
+      </div>
+    );
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+        if (!canvas) return;
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        setImage(img);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          const blob = items[i].getAsFile();
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const context = canvas.getContext("2d");
+              context.clearRect(0, 0, canvas.width, canvas.height);
+              context.drawImage(img, 0, 0);
+              setImage(img);
+            };
+            img.src = event.target.result as string;
+          };
+          reader.readAsDataURL(blob);
+          break;
+        }
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [image]);
+
+  return (
+    <>
+      <Head>
+        <title>Higher MiniApp</title>
+        <meta name="description" content="Farcaster Mini App using Higher Combined Template" />
+      </Head>
+      <div style={{ padding: 20 }}>
+        <h1>Higher MiniApp</h1>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: 20,
+            border: "1px solid #333",
+            marginTop: 20,
+            borderRadius: 10
+          }}
+        >
+          <div style={{ flexBasis: "90%", display: "flex", flexDirection: "column", gap: 10 }}>
+            <canvas id="canvas" style={{ width: "100%", maxWidth: 800, height: "auto" }} />
+          </div>
+          <div
+            style={{
+              flexBasis: "30%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+              background: "#101010",
+              padding: 20,
+              borderRadius: 10,
+              color: "white"
+            }}
+          >
+            <input type="file" accept="image/*" onChange={handleFileChange} />
+            <div style={{ display: "flex", marginBottom: 20, background: "#333", borderRadius: 5 }}>
+              {tools.map((tool) => (
+                <button
+                  key={tool.id}
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    background: activeTool === tool.id ? "#444" : "#333",
+                    color: activeTool === tool.id ? "#fff" : "#999",
+                    fontSize: 14
+                  }}
+                  onClick={() => setActiveTool(tool.id)}
+                >
+                  {tool.name}
+                </button>
+              ))}
+            </div>
+            <div>{renderSettings()}</div>
+            <Button
+              onClick={() => {
+                const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+                if (canvas) {
+                  const ctx = canvas.getContext("2d");
+                  ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                setImage(null);
+                setActiveTool("filter");
+              }}
+            >
+              Clear
+            </Button>
+            <Button
+              onClick={() => {
+                const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+                if (canvas) {
+                  const dataURL = canvas.toDataURL();
+                  const img = new Image();
+                  img.src = dataURL;
+                  setImage(img);
+                }
+              }}
+            >
+              Save
+            </Button>
+            <Button
+              onClick={() => {
+                const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+                if (!canvas) return;
+                const a = document.createElement("a");
+                a.href = canvas.toDataURL("image/png");
+                a.download = "higher_miniapp.png";
+                a.click();
+              }}
+            >
+              Download
+            </Button>
+            <Button onClick={undo}>Undo</Button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
