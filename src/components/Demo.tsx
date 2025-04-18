@@ -1,8 +1,9 @@
 // @ts-nocheck
 import Head from "next/head";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "~/components/ui/Button";
-import { removeBackground } from "@imgly/background-removal";
+// import { removeBackground } from "@imgly/background-removal";
+
 
 const tools = [
   {
@@ -112,10 +113,10 @@ const tools = [
       const dragReps = parseInt(document.getElementById("dragReps")?.value || "0", 10);
       const processedImageUrlElem = document.getElementById("processedImageUrl");
       const processedImageUrl = processedImageUrlElem ? processedImageUrlElem.value : "";
-      const emboss = parseInt(document.getElementById("emboss")?.value || "0", 10);
+      // const emboss = parseInt(document.getElementById("emboss")?.value || "0", 10);
       const opacity = parseInt(document.getElementById("opacity")?.value || "0", 10);
-      const skewX = parseInt(document.getElementById("skewX")?.value || "0", 10);
-      const skewY = parseInt(document.getElementById("skewY")?.value || "0", 10);
+      // const skewX = parseInt(document.getElementById("skewX")?.value || "0", 10);
+      // const skewY = parseInt(document.getElementById("skewY")?.value || "0", 10);
       const selectFont = document.getElementById("selectFont")?.value || "Helvetica";
       const color = document.getElementById("color")?.value || "#000000";
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -346,6 +347,7 @@ export default function Demo() {
               setImage(img);
             };
             img.src = event.target.result as string;
+            saveHistory();
           };
           reader.readAsDataURL(blob);
           break;
