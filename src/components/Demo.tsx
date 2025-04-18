@@ -208,7 +208,12 @@ const tools = [
   }
 ];
 
-export default function Demo() {
+interface DemoProps {
+  title?: string;
+}
+
+
+export default function Demo({title}: DemoProps) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [activeTool, setActiveTool] = useState("filter");
   const [history, setHistory] = useState<string[]>([]);
@@ -362,7 +367,7 @@ export default function Demo() {
   return (
     <>
       <Head>
-        <title>Higher MiniApp</title>
+        <title>{title}</title>
         <meta name="description" content="Farcaster Mini App using Higher Combined Template" />
       </Head>
       <div style={{ padding: 20 }}>
