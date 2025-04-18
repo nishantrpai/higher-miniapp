@@ -16,14 +16,15 @@ const tools = [
       { type: "range", label: "Motion Blur", state: "motionBlur", min: 0, max: 100, default: 0 },
       { type: "range", label: "Opacity Layer", state: "opacityLayer", min: 0, max: 100, default: 0 }
     ],
-    apply: (image) => {
+    apply: (image: HTMLImageElement) => {
       if (!image) return;
-      const reverseFilter = document.getElementById("reverseFilter")?.checked;
-      const filterThreshold = parseInt(document.getElementById("filterThreshold")?.value || "0", 10);
-      const grainyThreshold = parseInt(document.getElementById("grainyThreshold")?.value || "0", 10);
-      const motionBlur = parseInt(document.getElementById("motionBlur")?.value || "0", 10);
-      const color = document.getElementById("color")?.value || "#000000";
-      const opacityLayer = parseInt(document.getElementById("opacityLayer")?.value || "0", 10);
+      // Cast input elements to HTMLInputElement for stricter type checking
+      const reverseFilter = ((document.getElementById("reverseFilter") as HTMLInputElement)?.checked) ?? false;
+      const filterThreshold = parseInt(((document.getElementById("filterThreshold") as HTMLInputElement)?.value) || "0", 10);
+      const grainyThreshold = parseInt(((document.getElementById("grainyThreshold") as HTMLInputElement)?.value) || "0", 10);
+      const motionBlur = parseInt(((document.getElementById("motionBlur") as HTMLInputElement)?.value) || "0", 10);
+      const color = ((document.getElementById("color") as HTMLInputElement)?.value) || "#000000";
+      const opacityLayer = parseInt(((document.getElementById("opacityLayer") as HTMLInputElement)?.value) || "0", 10);
 
       const hexToRgb = (hex: string) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -35,6 +36,7 @@ const tools = [
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
       if (!canvas || !filterColor) return;
       const context = canvas.getContext("2d");
+      if (!context) return;
       canvas.width = image.width;
       canvas.height = image.height;
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -101,26 +103,24 @@ const tools = [
       { type: "range", label: "Emboss", state: "emboss", min: 0, max: 100, default: 0 },
       { type: "range", label: "Opacity", state: "opacity", min: 0, max: 100, default: 100 }
     ],
-    apply: (image) => {
+    apply: (image: HTMLImageElement) => {
       if (!image) return;
-      const offsetX = parseInt(document.getElementById("offsetX")?.value || "0", 10);
-      const offsetY = parseInt(document.getElementById("offsetY")?.value || "0", 10);
-      const scale = parseFloat(document.getElementById("scale")?.value || "1");
-      const offsetTheta = parseInt(document.getElementById("offsetTheta")?.value || "0", 10);
-      const foreground = document.getElementById("foreground")?.checked;
-      const dragGap = parseInt(document.getElementById("dragGap")?.value || "0", 10);
-      const dragReps = parseInt(document.getElementById("dragReps")?.value || "0", 10);
-      const processedImageUrlElem = document.getElementById("processedImageUrl");
+      const offsetX = parseInt(((document.getElementById("offsetX") as HTMLInputElement)?.value) || "0", 10);
+      const offsetY = parseInt(((document.getElementById("offsetY") as HTMLInputElement)?.value) || "0", 10);
+      const scale = parseFloat(((document.getElementById("scale") as HTMLInputElement)?.value) || "1");
+      const offsetTheta = parseInt(((document.getElementById("offsetTheta") as HTMLInputElement)?.value) || "0", 10);
+      const foreground = ((document.getElementById("foreground") as HTMLInputElement)?.checked) ?? false;
+      const dragGap = parseInt(((document.getElementById("dragGap") as HTMLInputElement)?.value) || "0", 10);
+      const dragReps = parseInt(((document.getElementById("dragReps") as HTMLInputElement)?.value) || "0", 10);
+      const processedImageUrlElem = document.getElementById("processedImageUrl") as HTMLInputElement;
       const processedImageUrl = processedImageUrlElem ? processedImageUrlElem.value : "";
-      // const emboss = parseInt(document.getElementById("emboss")?.value || "0", 10);
-      const opacity = parseInt(document.getElementById("opacity")?.value || "0", 10);
-      // const skewX = parseInt(document.getElementById("skewX")?.value || "0", 10);
-      // const skewY = parseInt(document.getElementById("skewY")?.value || "0", 10);
-      const selectFont = document.getElementById("selectFont")?.value || "Helvetica";
-      const color = document.getElementById("color")?.value || "#000000";
+      const opacity = parseInt(((document.getElementById("opacity") as HTMLInputElement)?.value) || "0", 10);
+      const selectFont = ((document.getElementById("selectFont") as HTMLSelectElement)?.value) || "Helvetica";
+      const color = ((document.getElementById("color") as HTMLInputElement)?.value) || "#000000";
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
       if (!canvas) return;
       const context = canvas.getContext("2d");
+      if (!context) return;
       canvas.width = image.width;
       canvas.height = image.height;
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -231,6 +231,7 @@ export default function Demo({title}: DemoProps) {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     if (!canvas) return;
     const context = canvas.getContext("2d");
+    if (!context) return;
     const img = new Image();
     img.onload = () => {
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -253,7 +254,7 @@ export default function Demo({title}: DemoProps) {
                   <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
                     {setting.label}
                   </label>
-                  <input type="checkbox" id={setting.state} defaultChecked={setting.default} onChange={() => tool.apply(image)} />
+                  <input type="checkbox" id={setting.state} defaultChecked={Boolean(setting.default)} onChange={() => image && tool.apply(image)} />
                 </div>
               );
             case "range":
@@ -268,8 +269,10 @@ export default function Demo({title}: DemoProps) {
                     min={setting.min}
                     max={setting.max}
                     step={setting.step || 1}
-                    defaultValue={setting.default}
+                    defaultValue={Boolean(setting.default)}
                     onChange={(e) => {
+                      if (!image) return;
+                      const value = parseFloat(e.target.value);
                       document.getElementById(setting.state).value = e.target.value;
                       tool.apply(image);
                     }}
@@ -322,6 +325,7 @@ export default function Demo({title}: DemoProps) {
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext("2d");
+        if (!ctx) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
         setImage(img);
@@ -343,9 +347,11 @@ export default function Demo({title}: DemoProps) {
             const img = new Image();
             img.onload = () => {
               const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+              if (!canvas) return;
+              const context = canvas.getContext("2d");
+              if (!context) return;
               canvas.width = img.width;
               canvas.height = img.height;
-              const context = canvas.getContext("2d");
               context.clearRect(0, 0, canvas.width, canvas.height);
               context.drawImage(img, 0, 0);
               setImage(img);
@@ -422,6 +428,7 @@ export default function Demo({title}: DemoProps) {
                 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
                 if (canvas) {
                   const ctx = canvas.getContext("2d");
+                  if (!ctx) return;
                   ctx.clearRect(0, 0, canvas.width, canvas.height);
                 }
                 setImage(null);
@@ -434,6 +441,8 @@ export default function Demo({title}: DemoProps) {
               onClick={() => {
                 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
                 if (canvas) {
+                  const ctx = canvas.getContext("2d");
+                  if (!ctx) return;
                   const dataURL = canvas.toDataURL();
                   const img = new Image();
                   img.src = dataURL;
