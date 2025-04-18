@@ -272,7 +272,6 @@ export default function Demo({title}: DemoProps) {
                     // defaultValue={setting.default}
                     onChange={(e) => {
                       if (!image) return;
-                      const value = parseFloat(e.target.value);
                       const element = document.getElementById(setting.state) as HTMLInputElement;
                       if (element) element.value = e.target.value;
                       tool.apply(image);
