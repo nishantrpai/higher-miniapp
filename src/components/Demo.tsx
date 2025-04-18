@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Head from "next/head";
 import React, { useState, useEffect } from "react";
 import { Button } from "~/components/ui/Button";
