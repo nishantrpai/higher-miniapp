@@ -269,11 +269,12 @@ export default function Demo({title}: DemoProps) {
                     min={setting.min}
                     max={setting.max}
                     step={setting.step || 1}
-                    defaultValue={Boolean(setting.default)}
+                    // defaultValue={setting.default}
                     onChange={(e) => {
                       if (!image) return;
                       const value = parseFloat(e.target.value);
-                      document.getElementById(setting.state).value = e.target.value;
+                      const element = document.getElementById(setting.state) as HTMLInputElement;
+                      if (element) element.value = e.target.value;
                       tool.apply(image);
                     }}
                   />
@@ -285,8 +286,8 @@ export default function Demo({title}: DemoProps) {
                   <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
                     {setting.label}:
                   </label>
-                  <select id={setting.state} defaultValue={setting.default} onChange={() => tool.apply(image)}>
-                    {setting.options.map((option) => (
+                  <select id={setting.state} defaultValue={String(setting.default)} onChange={() => image && tool.apply(image)}>
+                    {setting.options?.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -300,11 +301,11 @@ export default function Demo({title}: DemoProps) {
                   <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
                     {setting.label}:
                   </label>
-                  <input type="color" id={setting.state} defaultValue={setting.default} onChange={() => tool.apply(image)} />
+                  <input type="color" id={setting.state} defaultValue={setting.default.toString()} onChange={() => image && tool.apply(image)} />
                 </div>
               );
             case "hidden":
-              return <input key={setting.state} type="hidden" id={setting.state} defaultValue={setting.default} />;
+              return <input key={setting.state} type="hidden" id={setting.state} defaultValue={String(setting.default)} />;
             default:
               return null;
           }
@@ -344,6 +345,7 @@ export default function Demo({title}: DemoProps) {
           const blob = items[i].getAsFile();
           const reader = new FileReader();
           reader.onload = (event) => {
+            if (!event.target) return;
             const img = new Image();
             img.onload = () => {
               const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -359,6 +361,7 @@ export default function Demo({title}: DemoProps) {
             img.src = event.target.result as string;
             saveHistory();
           };
+          if (!blob) return;
           reader.readAsDataURL(blob);
           break;
         }
