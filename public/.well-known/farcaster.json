@@ -1,0 +1,12 @@
+{
+  "frame": {
+    "version": "1",
+    "name": "Higher",
+    "iconUrl": "https://higherminiapp.vercel.app/icon.png",
+    "homeUrl": "https://higherminiapp.vercel.app/",
+    "imageUrl": "https://yoink.party/framesV2/opengraph-image",
+    "buttonTitle": "Let's Go Higher",
+    "splashImageUrl": "https://higherminiapp.vercel.app/splash.png",
+    "splashBackgroundColor": "#000000"
+  }
+}
