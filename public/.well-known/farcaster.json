@@ -9,7 +9,7 @@
     "name": "Higher",
     "iconUrl": "https://higherminiapp.vercel.app/icon.png",
     "homeUrl": "https://higherminiapp.vercel.app/",
-    "imageUrl": "https://yoink.party/framesV2/opengraph-image",
+    "imageUrl": "https://higherminiapp.vercel.app/opengraph.jpg",
     "buttonTitle": "Let's Go Higher",
     "splashImageUrl": "https://higherminiapp.vercel.app/splash.png",
     "splashBackgroundColor": "#000000"
