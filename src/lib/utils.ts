@@ -100,7 +100,11 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
     : `${appUrl}/api/webhook`;
 
   return {
-    accountAssociation,
+    "accountAssociation": {
+      "header": "eyJmaWQiOjUyNjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg2OEYxNWJEYTcxMzUyQTBhNDNCNzEzMzY3NjgzN2UyZDI3NjA0RDRkIn0",
+      "payload": "eyJkb21haW4iOiJoaWdoZXJtaW5pYXBwLnZlcmNlbC5hcHAifQ",
+      "signature": "MHg5MGEwZDdhMWQxMzBhOGMzOGRjY2I5ZWYyNWQ3MThmN2JhMWFmOTk1ODE0MDIxODkzYWY3NjFmNmNjMjRlOGI1MDRiY2E1MjM0ZDNiNDNhZjJkOTI5NzNiZDc1NTIxNzhhYmFkMzAyZWU4Y2NlOGQ1NzNhMjRhYjE0MmVmZTNlOTFi"
+    },
     frame: {
       version: "1",
       name: process.env.NEXT_PUBLIC_FRAME_NAME || "Frames v2 Demo",

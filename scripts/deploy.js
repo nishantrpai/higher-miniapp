@@ -72,10 +72,10 @@ async function generateFarcasterMetadata(domain, fid, accountAddress, seedPhrase
   const encodedSignature = Buffer.from(signature, 'utf-8').toString('base64url');
 
   return {
-    accountAssociation: {
-      header: encodedHeader,
-      payload: encodedPayload,
-      signature: encodedSignature
+   "accountAssociation": {
+      "header": "eyJmaWQiOjUyNjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg2OEYxNWJEYTcxMzUyQTBhNDNCNzEzMzY3NjgzN2UyZDI3NjA0RDRkIn0",
+      "payload": "eyJkb21haW4iOiJoaWdoZXJtaW5pYXBwLnZlcmNlbC5hcHAifQ",
+      "signature": "MHg5MGEwZDdhMWQxMzBhOGMzOGRjY2I5ZWYyNWQ3MThmN2JhMWFmOTk1ODE0MDIxODkzYWY3NjFmNmNjMjRlOGI1MDRiY2E1MjM0ZDNiNDNhZjJkOTI5NzNiZDc1NTIxNzhhYmFkMzAyZWU4Y2NlOGQ1NzNhMjRhYjE0MmVmZTNlOTFi"
     },
     frame: {
       version: "1",
