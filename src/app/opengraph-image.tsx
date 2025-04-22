@@ -7,20 +7,14 @@ export const size = {
 };
 
 export const contentType = "image/png";
-const openGraphimage = 'https://higherminiapp.vercel.app/opengraph.jpg';
+// const openGraphimage = '/opengraph.jpg';
 
 // dynamically generated OG image for frame preview
 export default async function Image() {
   return new ImageResponse(
     (
       <div tw="h-full w-full flex flex-col justify-center items-center relative bg-black">
-        <img
-          src={openGraphimage}
-          alt="Higher"
-          width={size.width}
-          height={size.height}
-          tw="absolute inset-0 object-cover"
-        />
+        <h1 tw="text-6xl">{alt}</h1>
       </div>
     ),
     {
