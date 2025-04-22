@@ -429,7 +429,7 @@ async function deployToVercel(useGitHub = false) {
         ? `https://api.neynar.com/f/app/${process.env.NEYNAR_CLIENT_ID}/event`
         : `https://${domain}/api/webhook`;
 
-      frameMetadata = await generateFarcasterMetadata(domain, fid, accountAddress, process.env.SEED_PHRASE, webhookUrl);
+      // frameMetadata = await generateFarcasterMetadata(domain, fid, accountAddress, process.env.SEED_PHRASE, webhookUrl);
       console.log('✅ Frame metadata generated and signed');
     }
 
