@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = process.env.NEXT_PUBLIC_FRAME_NAME || "Frames V2 Demo";
+export const alt = process.env.NEXT_PUBLIC_FRAME_NAME || "Higher";
 export const size = {
   width: 600,
   height: 400,
