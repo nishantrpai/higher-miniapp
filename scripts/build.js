@@ -330,7 +330,7 @@ async function main() {
       ? `https://api.neynar.com/f/app/${neynarClientId}/event`
       : `${domain}/api/webhook`;
 
-    // const metadata = await generateFarcasterMetadata(domain, fid, accountAddress, seedPhrase, webhookUrl);
+    const metadata = await generateFarcasterMetadata(domain, fid, accountAddress, seedPhrase, webhookUrl);
     console.log('\n✅ Frame manifest generated' + (seedPhrase ? ' and signed' : ''));
 
     // Read existing .env file or create new one
