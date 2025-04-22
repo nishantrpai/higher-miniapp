@@ -5,7 +5,7 @@ const appUrl = process.env.NEXT_PUBLIC_URL;
 
 // frame preview metadata
 const appName = process.env.NEXT_PUBLIC_FRAME_NAME;
-const splashImageUrl = `${appUrl}/splash.png`;
+const splashImageUrl = `${appUrl}/opengraph.png`;
 const iconUrl = `${appUrl}/icon.png`;
 
 const framePreviewMetadata = {
@@ -19,7 +19,7 @@ const framePreviewMetadata = {
       url: appUrl,
       splashImageUrl,
       iconUrl,
-      splashBackgroundColor: "#f7f7f7",
+      splashBackgroundColor: "#000",
     },
   },
 };

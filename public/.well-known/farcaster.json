@@ -11,7 +11,7 @@
     "homeUrl": "https://higherminiapp.vercel.app/",
     "imageUrl": "https://higherminiapp.vercel.app/opengraph.png",
     "buttonTitle": "Let's Go Higher",
-    "splashImageUrl": "https://higherminiapp.vercel.app/splash.png",
+    "splashImageUrl": "https://higherminiapp.vercel.app/opengraph.png",
     "splashBackgroundColor": "#000000"
   }
 }

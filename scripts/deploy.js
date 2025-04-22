@@ -85,7 +85,7 @@ async function generateFarcasterMetadata(domain, fid, accountAddress, seedPhrase
       imageUrl: `https://${trimmedDomain}/opengraph.png`,
       buttonTitle: process.env.NEXT_PUBLIC_FRAME_BUTTON_TEXT?.trim(),
       splashImageUrl: `https://${trimmedDomain}/splash.png`,
-      splashBackgroundColor: "#f7f7f7",
+      splashBackgroundColor: "#000000",
       webhookUrl: webhookUrl?.trim(),
     },
   };
