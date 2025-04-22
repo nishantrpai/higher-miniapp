@@ -7,7 +7,7 @@ export const size = {
 };
 
 export const contentType = "image/png";
-const openGraphimage = '/opengraph.jpg';
+const openGraphimage = 'https://higherminiapp.vercel.app/opengraph.jpg';
 
 // dynamically generated OG image for frame preview
 export default async function Image() {
