@@ -53,29 +53,31 @@ async function lookupFidByCustodyAddress(custodyAddress, apiKey) {
 
 async function generateFarcasterMetadata(domain, fid, accountAddress, seedPhrase, webhookUrl) {
   const trimmedDomain = domain.trim();
-  const header = {
-    type: 'custody',
-    key: accountAddress,
-    fid,
-  };
-  const encodedHeader = Buffer.from(JSON.stringify(header), 'utf-8').toString('base64');
+    // const header = {
+  //   type: 'custody',
+  //   key: accountAddress,
+  //   fid,
+  // };
+  // const encodedHeader = Buffer.from(JSON.stringify(header), 'utf-8').toString('base64');
+  const encodedHeader = 'eyJmaWQiOjUyNjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg2OEYxNWJEYTcxMzUyQTBhNDNCNzEzMzY3NjgzN2UyZDI3NjA0RDRkIn0';
+  // const payload = {
+  //   domain
+  // };
+  const encodedPayload = 'eyJkb21haW4iOiJoaWdoZXJtaW5pYXBwLnZlcmNlbC5hcHAifQ';
 
-  const payload = {
-    domain: trimmedDomain
-  };
-  const encodedPayload = Buffer.from(JSON.stringify(payload), 'utf-8').toString('base64url');
+  // const account = mnemonicToAccount(seedPhrase);
+  // const signature = await account.signMessage({ 
+  //   message: `${encodedHeader}.${encodedPayload}`
+  // });
+  const encodedSignature = 'MHg5MGEwZDdhMWQxMzBhOGMzOGRjY2I5ZWYyNWQ3MThmN2JhMWFmOTk1ODE0MDIxODkzYWY3NjFmNmNjMjRlOGI1MDRiY2E1MjM0ZDNiNDNhZjJkOTI5NzNiZDc1NTIxNzhhYmFkMzAyZWU4Y2NlOGQ1NzNhMjRhYjE0MmVmZTNlOTFi';
 
-  const account = mnemonicToAccount(seedPhrase);
-  const signature = await account.signMessage({ 
-    message: `${encodedHeader}.${encodedPayload}`
-  });
-  const encodedSignature = Buffer.from(signature, 'utf-8').toString('base64url');
+
 
   return {
-   "accountAssociation": {
-      "header": "eyJmaWQiOjUyNjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg2OEYxNWJEYTcxMzUyQTBhNDNCNzEzMzY3NjgzN2UyZDI3NjA0RDRkIn0",
-      "payload": "eyJkb21haW4iOiJoaWdoZXJtaW5pYXBwLnZlcmNlbC5hcHAifQ",
-      "signature": "MHg5MGEwZDdhMWQxMzBhOGMzOGRjY2I5ZWYyNWQ3MThmN2JhMWFmOTk1ODE0MDIxODkzYWY3NjFmNmNjMjRlOGI1MDRiY2E1MjM0ZDNiNDNhZjJkOTI5NzNiZDc1NTIxNzhhYmFkMzAyZWU4Y2NlOGQ1NzNhMjRhYjE0MmVmZTNlOTFi"
+    accountAssociation: {
+      header: encodedHeader,
+      payload: encodedPayload,
+      signature: encodedSignature
     },
     frame: {
       version: "1",

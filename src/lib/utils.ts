@@ -99,6 +99,7 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
     ? `https://api.neynar.com/f/app/${neynarClientId}/event`
     : `${appUrl}/api/webhook`;
 
+  accountAssociation = {};
   return {
     "accountAssociation": {
       "header": "eyJmaWQiOjUyNjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg2OEYxNWJEYTcxMzUyQTBhNDNCNzEzMzY3NjgzN2UyZDI3NjA0RDRkIn0",
