@@ -10,6 +10,16 @@ interface FrameContextType {
   context: Context.FrameContext | undefined;
 }
 
+interface ComposeEmbeds {
+  imageData?: string;
+  url?: string;
+}
+
+interface ComposeCastOptions {
+  text?: string;
+  embeds?: ComposeEmbeds[];
+}
+
 const FrameContext = React.createContext<FrameContextType | undefined>(undefined);
 
 export function useFrame() {
@@ -44,6 +54,17 @@ export function useFrame() {
       }
 
       setAddFrameResult(`Error: ${error}`);
+    }
+  }, []);
+
+  // Add composeCast function
+  const composeCast = useCallback(async (options: ComposeCastOptions) => {
+    try {
+      await sdk.actions.composeCast(options);
+      return { success: true };
+    } catch (error) {
+      console.error("Error composing cast:", error);
+      return { success: false, error };
     }
   }, []);
 
@@ -111,7 +132,7 @@ export function useFrame() {
     }
   }, [isSDKLoaded]);
 
-  return { isSDKLoaded, context, added, notificationDetails, lastEvent, addFrame, addFrameResult };
+  return { isSDKLoaded, context, added, notificationDetails, lastEvent, addFrame, addFrameResult, composeCast };
 }
 
 export function FrameProvider({ children }: { children: React.ReactNode }) {
@@ -126,4 +147,4 @@ export function FrameProvider({ children }: { children: React.ReactNode }) {
       {children}
     </FrameContext.Provider>
   );
-} 
+}

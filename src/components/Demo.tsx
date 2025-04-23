@@ -1,6 +1,7 @@
 import Head from "next/head";
 import React, { useState, useEffect } from "react";
 import { Button } from "~/components/ui/Button";
+import { useFrame } from "~/components/providers/FrameProvider";
 // import { removeBackground } from "@imgly/background-removal";
 
 const tools = [
@@ -429,6 +430,7 @@ export default function Demo({ title }: DemoProps) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [activeTool, setActiveTool] = useState("filter");
   const [history, setHistory] = useState<string[]>([]);
+  const { composeCast } = useFrame();
 
   const saveHistory = () => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -759,15 +761,11 @@ export default function Demo({ title }: DemoProps) {
                 // Get the canvas image as a data URL
                 const imageData = canvas.toDataURL("image/png");
 
-                // Use the Farcaster SDK to compose a cast with the image
-                if (typeof window !== "undefined") {
-                  import("@farcaster/frame-sdk").then((sdk) => {
-                    sdk.default.actions.composeCast({
-                      text: "Created with Higher MiniApp 🎨",
-                      embeds: [{ imageData }],
-                    });
-                  });
-                }
+                // Use our composeCast from useFrame hook
+                composeCast({
+                  text: "Created with Higher MiniApp 🎨",
+                  embeds: [{ imageData }],
+                });
               }}
             >
               Cast
