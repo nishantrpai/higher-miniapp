@@ -3,33 +3,89 @@ import React, { useState, useEffect } from "react";
 import { Button } from "~/components/ui/Button";
 // import { removeBackground } from "@imgly/background-removal";
 
-
 const tools = [
   {
     id: "filter",
     name: "Higher Filter",
     settings: [
       { type: "color", label: "Color", state: "color", default: "#54FF56" },
-      { type: "checkbox", label: "Reverse filter", state: "reverseFilter", default: false },
-      { type: "range", label: "Filter Threshold", state: "filterThreshold", min: 0, max: 255, default: 0 },
-      { type: "range", label: "Grainy", state: "grainyThreshold", min: 0, max: 100, default: 0 },
-      { type: "range", label: "Motion Blur", state: "motionBlur", min: 0, max: 100, default: 0 },
-      { type: "range", label: "Opacity Layer", state: "opacityLayer", min: 0, max: 100, default: 0 }
+      {
+        type: "checkbox",
+        label: "Reverse filter",
+        state: "reverseFilter",
+        default: false,
+      },
+      {
+        type: "range",
+        label: "Filter Threshold",
+        state: "filterThreshold",
+        min: 0,
+        max: 255,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Grainy",
+        state: "grainyThreshold",
+        min: 0,
+        max: 100,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Motion Blur",
+        state: "motionBlur",
+        min: 0,
+        max: 100,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Opacity Layer",
+        state: "opacityLayer",
+        min: 0,
+        max: 100,
+        default: 0,
+      },
     ],
     apply: (image: HTMLImageElement) => {
       if (!image) return;
       // Cast input elements to HTMLInputElement for stricter type checking
-      const reverseFilter = ((document.getElementById("reverseFilter") as HTMLInputElement)?.checked) ?? false;
-      const filterThreshold = parseInt(((document.getElementById("filterThreshold") as HTMLInputElement)?.value) || "0", 10);
-      const grainyThreshold = parseInt(((document.getElementById("grainyThreshold") as HTMLInputElement)?.value) || "0", 10);
-      const motionBlur = parseInt(((document.getElementById("motionBlur") as HTMLInputElement)?.value) || "0", 10);
-      const color = ((document.getElementById("color") as HTMLInputElement)?.value) || "#000000";
-      const opacityLayer = parseInt(((document.getElementById("opacityLayer") as HTMLInputElement)?.value) || "0", 10);
+      const reverseFilter =
+        (document.getElementById("reverseFilter") as HTMLInputElement)
+          ?.checked ?? false;
+      const filterThreshold = parseInt(
+        (document.getElementById("filterThreshold") as HTMLInputElement)
+          ?.value || "0",
+        10
+      );
+      const grainyThreshold = parseInt(
+        (document.getElementById("grainyThreshold") as HTMLInputElement)
+          ?.value || "0",
+        10
+      );
+      const motionBlur = parseInt(
+        (document.getElementById("motionBlur") as HTMLInputElement)?.value ||
+          "0",
+        10
+      );
+      const color =
+        (document.getElementById("color") as HTMLInputElement)?.value ||
+        "#000000";
+      const opacityLayer = parseInt(
+        (document.getElementById("opacityLayer") as HTMLInputElement)?.value ||
+          "0",
+        10
+      );
 
       const hexToRgb = (hex: string) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result
-          ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+          ? {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16),
+            }
           : null;
       };
       const filterColor = hexToRgb(color);
@@ -49,7 +105,10 @@ const tools = [
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
           const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-          if ((reverseFilter && avg <= filterThreshold) || (!reverseFilter && avg > filterThreshold)) {
+          if (
+            (reverseFilter && avg <= filterThreshold) ||
+            (!reverseFilter && avg > filterThreshold)
+          ) {
             data[i] = filterColor.r;
             data[i + 1] = filterColor.g;
             data[i + 2] = filterColor.b;
@@ -82,41 +141,162 @@ const tools = [
         context.fillStyle = `rgba(0,0,0,${opacityLayer / 100})`;
         context.fillRect(0, 0, canvas.width, canvas.height);
       }
-    }
+    },
   },
   {
     id: "highertags",
     name: "Higher Tags",
     settings: [
-      { type: "select", label: "Select Font", state: "selectFont", options: ["Helvetica", "Times New Roman", "Comic Sans", "Higher TM", "Arrow", "Scanner", "Adidagh"], default: "Helvetica" },
+      {
+        type: "select",
+        label: "Select Font",
+        state: "selectFont",
+        options: [
+          "Helvetica",
+          "Times New Roman",
+          "Comic Sans",
+          "Higher TM",
+          "Arrow",
+          "Scanner",
+          "Adidagh",
+        ],
+        default: "Helvetica",
+      },
       { type: "color", label: "Color", state: "color", default: "#000000" },
-      { type: "checkbox", label: "Foreground", state: "foreground", default: false },
-      { type: "range", label: "Offset X", state: "offsetX", min: -1500, max: 1500, default: 0 },
-      { type: "range", label: "Offset Y", state: "offsetY", min: -1500, max: 1500, default: 0 },
-      { type: "range", label: "Scale", state: "scale", min: 0, max: 10, step: 0.01, default: 1 },
-      { type: "range", label: "Skew X", state: "skewX", min: -360, max: 360, default: 0 },
-      { type: "range", label: "Skew Y", state: "skewY", min: -360, max: 360, default: 0 },
-      { type: "range", label: "Rotate", state: "offsetTheta", min: -360, max: 360, default: 0 },
-      { type: "range", label: "Drag Gap", state: "dragGap", min: 0, max: 5000, default: 0 },
-      { type: "range", label: "Drag reps", state: "dragReps", min: 0, max: 100, default: 0 },
+      {
+        type: "checkbox",
+        label: "Foreground",
+        state: "foreground",
+        default: false,
+      },
+      {
+        type: "range",
+        label: "Offset X",
+        state: "offsetX",
+        min: -1500,
+        max: 1500,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Offset Y",
+        state: "offsetY",
+        min: -1500,
+        max: 1500,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Scale",
+        state: "scale",
+        min: 0,
+        max: 10,
+        step: 0.01,
+        default: 1,
+      },
+      {
+        type: "range",
+        label: "Skew X",
+        state: "skewX",
+        min: -360,
+        max: 360,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Skew Y",
+        state: "skewY",
+        min: -360,
+        max: 360,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Rotate",
+        state: "offsetTheta",
+        min: -360,
+        max: 360,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Drag Gap",
+        state: "dragGap",
+        min: 0,
+        max: 5000,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Drag reps",
+        state: "dragReps",
+        min: 0,
+        max: 100,
+        default: 0,
+      },
       { type: "hidden", state: "processedImageUrl", default: "" },
-      { type: "range", label: "Emboss", state: "emboss", min: 0, max: 100, default: 0 },
-      { type: "range", label: "Opacity", state: "opacity", min: 0, max: 100, default: 100 }
+      {
+        type: "range",
+        label: "Emboss",
+        state: "emboss",
+        min: 0,
+        max: 100,
+        default: 0,
+      },
+      {
+        type: "range",
+        label: "Opacity",
+        state: "opacity",
+        min: 0,
+        max: 100,
+        default: 100,
+      },
     ],
     apply: (image: HTMLImageElement) => {
       if (!image) return;
-      const offsetX = parseInt(((document.getElementById("offsetX") as HTMLInputElement)?.value) || "0", 10);
-      const offsetY = parseInt(((document.getElementById("offsetY") as HTMLInputElement)?.value) || "0", 10);
-      const scale = parseFloat(((document.getElementById("scale") as HTMLInputElement)?.value) || "1");
-      const offsetTheta = parseInt(((document.getElementById("offsetTheta") as HTMLInputElement)?.value) || "0", 10);
-      const foreground = ((document.getElementById("foreground") as HTMLInputElement)?.checked) ?? false;
-      const dragGap = parseInt(((document.getElementById("dragGap") as HTMLInputElement)?.value) || "0", 10);
-      const dragReps = parseInt(((document.getElementById("dragReps") as HTMLInputElement)?.value) || "0", 10);
-      const processedImageUrlElem = document.getElementById("processedImageUrl") as HTMLInputElement;
-      const processedImageUrl = processedImageUrlElem ? processedImageUrlElem.value : "";
-      const opacity = parseInt(((document.getElementById("opacity") as HTMLInputElement)?.value) || "0", 10);
-      const selectFont = ((document.getElementById("selectFont") as HTMLSelectElement)?.value) || "Helvetica";
-      const color = ((document.getElementById("color") as HTMLInputElement)?.value) || "#000000";
+      const offsetX = parseInt(
+        (document.getElementById("offsetX") as HTMLInputElement)?.value || "0",
+        10
+      );
+      const offsetY = parseInt(
+        (document.getElementById("offsetY") as HTMLInputElement)?.value || "0",
+        10
+      );
+      const scale = parseFloat(
+        (document.getElementById("scale") as HTMLInputElement)?.value || "1"
+      );
+      const offsetTheta = parseInt(
+        (document.getElementById("offsetTheta") as HTMLInputElement)?.value ||
+          "0",
+        10
+      );
+      const foreground =
+        (document.getElementById("foreground") as HTMLInputElement)?.checked ??
+        false;
+      const dragGap = parseInt(
+        (document.getElementById("dragGap") as HTMLInputElement)?.value || "0",
+        10
+      );
+      const dragReps = parseInt(
+        (document.getElementById("dragReps") as HTMLInputElement)?.value || "0",
+        10
+      );
+      const processedImageUrlElem = document.getElementById(
+        "processedImageUrl"
+      ) as HTMLInputElement;
+      const processedImageUrl = processedImageUrlElem
+        ? processedImageUrlElem.value
+        : "";
+      const opacity = parseInt(
+        (document.getElementById("opacity") as HTMLInputElement)?.value || "0",
+        10
+      );
+      const selectFont =
+        (document.getElementById("selectFont") as HTMLSelectElement)?.value ||
+        "Helvetica";
+      const color =
+        (document.getElementById("color") as HTMLInputElement)?.value ||
+        "#000000";
       const canvas = document.getElementById("canvas") as HTMLCanvasElement;
       if (!canvas) return;
       const context = canvas.getContext("2d");
@@ -134,10 +314,22 @@ const tools = [
           context.globalAlpha = opacity / 100;
           if (dragReps > 0) {
             for (let i = 0; i < dragReps; i++) {
-              context.drawImage(hat, offsetX, offsetY + i * dragGap, hat.width * scale, hat.height * scale);
+              context.drawImage(
+                hat,
+                offsetX,
+                offsetY + i * dragGap,
+                hat.width * scale,
+                hat.height * scale
+              );
             }
           } else {
-            context.drawImage(hat, offsetX, offsetY, hat.width * scale, hat.height * scale);
+            context.drawImage(
+              hat,
+              offsetX,
+              offsetY,
+              hat.width * scale,
+              hat.height * scale
+            );
           }
         } else {
           if (processedImageUrl && processedImageUrl !== "processing") {
@@ -150,16 +342,34 @@ const tools = [
                   context.save();
                   context.translate(offsetX, offsetY);
                   context.rotate((offsetTheta * Math.PI) / 180);
-                  context.drawImage(hat, 0, i * dragGap, hat.width * scale, hat.height * scale);
+                  context.drawImage(
+                    hat,
+                    0,
+                    i * dragGap,
+                    hat.width * scale,
+                    hat.height * scale
+                  );
                   context.restore();
                 }
               } else {
                 context.translate(offsetX, offsetY);
                 context.rotate((offsetTheta * Math.PI) / 180);
-                context.drawImage(hat, 0, 0, hat.width * scale, hat.height * scale);
+                context.drawImage(
+                  hat,
+                  0,
+                  0,
+                  hat.width * scale,
+                  hat.height * scale
+                );
               }
               context.restore();
-              context.drawImage(foregroundImg, 0, 0, canvas.width, canvas.height);
+              context.drawImage(
+                foregroundImg,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+              );
             };
             foregroundImg.src = processedImageUrl;
           }
@@ -198,22 +408,24 @@ const tools = [
         return;
       }
       fetch(svgPath)
-        .then(response => response.text())
-        .then(svgText => {
-          const coloredSvg = svgText.replace(/fill="[^"]*"/g, `fill="${color}"`);
+        .then((response) => response.text())
+        .then((svgText) => {
+          const coloredSvg = svgText.replace(
+            /fill="[^"]*"/g,
+            `fill="${color}"`
+          );
           const blob = new Blob([coloredSvg], { type: "image/svg+xml" });
           hat.src = URL.createObjectURL(blob);
         });
-    }
-  }
+    },
+  },
 ];
 
 interface DemoProps {
   title?: string;
 }
 
-
-export default function Demo({title}: DemoProps) {
+export default function Demo({ title }: DemoProps) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [activeTool, setActiveTool] = useState("filter");
   const [history, setHistory] = useState<string[]>([]);
@@ -250,17 +462,42 @@ export default function Demo({title}: DemoProps) {
           switch (setting.type) {
             case "checkbox":
               return (
-                <div key={setting.state} style={{ marginTop: 20, display: "flex", alignItems: "center" }}>
-                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                <div
+                  key={setting.state}
+                  style={{
+                    marginTop: 20,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <label
+                    htmlFor={setting.state}
+                    style={{ fontSize: 12, marginRight: 10 }}
+                  >
                     {setting.label}
                   </label>
-                  <input type="checkbox" id={setting.state} defaultChecked={Boolean(setting.default)} onChange={() => image && tool.apply(image)} />
+                  <input
+                    type="checkbox"
+                    id={setting.state}
+                    defaultChecked={Boolean(setting.default)}
+                    onChange={() => image && tool.apply(image)}
+                  />
                 </div>
               );
             case "range":
               return (
-                <div key={setting.state} style={{ marginTop: 20, display: "flex", alignItems: "center" }}>
-                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                <div
+                  key={setting.state}
+                  style={{
+                    marginTop: 20,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <label
+                    htmlFor={setting.state}
+                    style={{ fontSize: 12, marginRight: 10 }}
+                  >
                     {setting.label}:
                   </label>
                   <input
@@ -272,7 +509,9 @@ export default function Demo({title}: DemoProps) {
                     // defaultValue={setting.default}
                     onChange={(e) => {
                       if (!image) return;
-                      const element = document.getElementById(setting.state) as HTMLInputElement;
+                      const element = document.getElementById(
+                        setting.state
+                      ) as HTMLInputElement;
                       if (element) element.value = e.target.value;
                       tool.apply(image);
                     }}
@@ -282,10 +521,17 @@ export default function Demo({title}: DemoProps) {
             case "select":
               return (
                 <div key={setting.state} style={{ marginTop: 20 }}>
-                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                  <label
+                    htmlFor={setting.state}
+                    style={{ fontSize: 12, marginRight: 10 }}
+                  >
                     {setting.label}:
                   </label>
-                  <select id={setting.state} defaultValue={String(setting.default)} onChange={() => image && tool.apply(image)}>
+                  <select
+                    id={setting.state}
+                    defaultValue={String(setting.default)}
+                    onChange={() => image && tool.apply(image)}
+                  >
                     {setting.options?.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -296,15 +542,37 @@ export default function Demo({title}: DemoProps) {
               );
             case "color":
               return (
-                <div key={setting.state} style={{ marginTop: 20, display: "flex", alignItems: "center" }}>
-                  <label htmlFor={setting.state} style={{ fontSize: 12, marginRight: 10 }}>
+                <div
+                  key={setting.state}
+                  style={{
+                    marginTop: 20,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <label
+                    htmlFor={setting.state}
+                    style={{ fontSize: 12, marginRight: 10 }}
+                  >
                     {setting.label}:
                   </label>
-                  <input type="color" id={setting.state} defaultValue={setting.default.toString()} onChange={() => image && tool.apply(image)} />
+                  <input
+                    type="color"
+                    id={setting.state}
+                    defaultValue={setting.default.toString()}
+                    onChange={() => image && tool.apply(image)}
+                  />
                 </div>
               );
             case "hidden":
-              return <input key={setting.state} type="hidden" id={setting.state} defaultValue={String(setting.default)} />;
+              return (
+                <input
+                  key={setting.state}
+                  type="hidden"
+                  id={setting.state}
+                  defaultValue={String(setting.default)}
+                />
+              );
             default:
               return null;
           }
@@ -347,7 +615,9 @@ export default function Demo({title}: DemoProps) {
             if (!event.target) return;
             const img = new Image();
             img.onload = () => {
-              const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+              const canvas = document.getElementById(
+                "canvas"
+              ) as HTMLCanvasElement;
               if (!canvas) return;
               const context = canvas.getContext("2d");
               if (!context) return;
@@ -376,7 +646,10 @@ export default function Demo({title}: DemoProps) {
     <>
       <Head>
         <title>{title}</title>
-        <meta name="description" content="Farcaster Mini App using Higher Combined Template" />
+        <meta
+          name="description"
+          content="Farcaster Mini App using Higher Combined Template"
+        />
       </Head>
       <div style={{ padding: 20 }}>
         <h1>Higher MiniApp</h1>
@@ -388,11 +661,21 @@ export default function Demo({title}: DemoProps) {
             gap: 20,
             border: "1px solid #333",
             marginTop: 20,
-            borderRadius: 10
+            borderRadius: 10,
           }}
         >
-          <div style={{ flexBasis: "90%", display: "flex", flexDirection: "column", gap: 10 }}>
-            <canvas id="canvas" style={{ width: "100%", maxWidth: 800, height: "auto" }} />
+          <div
+            style={{
+              flexBasis: "90%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            <canvas
+              id="canvas"
+              style={{ width: "100%", maxWidth: 800, height: "auto" }}
+            />
           </div>
           <div
             style={{
@@ -403,11 +686,18 @@ export default function Demo({title}: DemoProps) {
               background: "#101010",
               padding: 20,
               borderRadius: 10,
-              color: "white"
+              color: "white",
             }}
           >
             <input type="file" accept="image/*" onChange={handleFileChange} />
-            <div style={{ display: "flex", marginBottom: 20, background: "#333", borderRadius: 5 }}>
+            <div
+              style={{
+                display: "flex",
+                marginBottom: 20,
+                background: "#333",
+                borderRadius: 5,
+              }}
+            >
               {tools.map((tool) => (
                 <button
                   key={tool.id}
@@ -416,7 +706,7 @@ export default function Demo({title}: DemoProps) {
                     border: "none",
                     background: activeTool === tool.id ? "#444" : "#333",
                     color: activeTool === tool.id ? "#fff" : "#999",
-                    fontSize: 14
+                    fontSize: 14,
                   }}
                   onClick={() => setActiveTool(tool.id)}
                 >
@@ -425,9 +715,12 @@ export default function Demo({title}: DemoProps) {
               ))}
             </div>
             <div>{renderSettings()}</div>
+            <Button onClick={undo}>Undo</Button>
             <Button
               onClick={() => {
-                const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+                const canvas = document.getElementById(
+                  "canvas"
+                ) as HTMLCanvasElement;
                 if (canvas) {
                   const ctx = canvas.getContext("2d");
                   if (!ctx) return;
@@ -441,7 +734,9 @@ export default function Demo({title}: DemoProps) {
             </Button>
             <Button
               onClick={() => {
-                const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+                const canvas = document.getElementById(
+                  "canvas"
+                ) as HTMLCanvasElement;
                 if (canvas) {
                   const ctx = canvas.getContext("2d");
                   if (!ctx) return;
@@ -456,7 +751,32 @@ export default function Demo({title}: DemoProps) {
             </Button>
             <Button
               onClick={() => {
-                const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+                const canvas = document.getElementById(
+                  "canvas"
+                ) as HTMLCanvasElement;
+                if (!canvas) return;
+
+                // Get the canvas image as a data URL
+                const imageData = canvas.toDataURL("image/png");
+
+                // Use the Farcaster SDK to compose a cast with the image
+                if (typeof window !== "undefined") {
+                  import("@farcaster/frame-sdk").then((sdk) => {
+                    sdk.default.actions.composeCast({
+                      text: "Created with Higher MiniApp 🎨",
+                      embeds: [{ imageData }],
+                    });
+                  });
+                }
+              }}
+            >
+              Cast
+            </Button>
+            <Button
+              onClick={() => {
+                const canvas = document.getElementById(
+                  "canvas"
+                ) as HTMLCanvasElement;
                 if (!canvas) return;
                 const a = document.createElement("a");
                 a.href = canvas.toDataURL("image/png");
@@ -466,7 +786,6 @@ export default function Demo({title}: DemoProps) {
             >
               Download
             </Button>
-            <Button onClick={undo}>Undo</Button>
           </div>
         </div>
       </div>
